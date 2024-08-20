@@ -1,0 +1,26 @@
+version: '3'
+dotenv: ['.env']
+tasks:
+  run:
+    cmds:
+    - go run cmd/main.go
+  docker-compose-up:
+    cmds:
+    - docker compose -f configs/docker/compose.yaml up
+  docker-compose-down:
+    cmds:
+    - docker compose -f configs/docker/compose.yaml down --rmi
+  db-inspect:
+    cmds:
+    - atlas schema inspect 
+      -u "postgresql://postgres:password@localhost:5432/postgres?sslmode=disable" 
+      --format "{{ printf "{{ sql . }}" }}" > configs/database/schema.sql
+  db-migrate:
+    cmds:
+    - atlas schema apply 
+      -u "postgresql://postgres:password@localhost:5432/postgres?sslmode=disable" 
+      --to file://configs/database/schema.sql 
+      --dev-url "docker://postgres/15"
+  sqlc:
+    cmds:
+    - sqlc generate -f configs/database/sqlc.yaml 
