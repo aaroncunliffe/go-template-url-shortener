@@ -36,5 +36,10 @@ func Open(ctx context.Context, cfg Config) (*pgxpool.Pool, error) {
 		return nil, err
 	}
 
+	// Test connection
+	if err := conn.Ping(ctx); err != nil {
+		return nil, err
+	}
+
 	return conn, nil
 }
