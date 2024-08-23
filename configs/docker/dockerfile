@@ -1,0 +1,29 @@
+ARG GO_VERSION=1.23.0
+ARG DISTROLESS_VERSION=latest
+
+# Stage 1: building the executable
+FROM golang:${GO_VERSION}-alpine AS build-stage
+
+
+ARG VERSION
+ARG BUILD_DATE
+
+WORKDIR /src
+COPY ./go.mod ./go.sum ./
+RUN go mod download
+COPY ./ ./
+
+RUN CGO_ENABLED=0 go build \
+    -ldflags "-X main.version=${VERSION} -X main.buildDate=${BUILD_DATE}" \
+    -installsuffix 'static' \
+    -o /app ./cmd
+
+# Stage 2: Move built binary to distroless
+FROM gcr.io/distroless/static@${DISTROLESS_VERSION} AS final-stage
+
+USER nonroot:nonroot
+
+COPY --from=build --chown=nonroot:nonroot /app /app
+
+ENTRYPOINT ["./app"]
+

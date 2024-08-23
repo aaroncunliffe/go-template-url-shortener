@@ -1,9 +1,20 @@
 version: '3'
 dotenv: ['.env']
 tasks:
+  # add vet
   run:
     cmds:
     - go run cmd/main.go
+  build:
+    vars:
+      VERSION: 0.0.1
+    cmds:
+      - docker build
+        -f configs/docker/dockerfile
+        -t aaroncunliffe/link-shortener:{{.VERSION}}
+        --build-arg VERSION={{.VERSION}}
+        --build-arg BUILD_DATE={{ now | date "2006-01-02"}}
+        .
   docker-compose-up:
     cmds:
     - docker compose -f configs/docker/compose.yaml up
