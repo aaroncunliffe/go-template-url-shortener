@@ -14,6 +14,10 @@ SELECT id, short_path, original_url, created_at, updated_at FROM links
 WHERE short_path = $1
 `
 
+// GetLink
+//
+//	SELECT id, short_path, original_url, created_at, updated_at FROM links
+//	WHERE short_path = $1
 func (q *Queries) GetLink(ctx context.Context, shortPath string) (Link, error) {
 	row := q.db.QueryRow(ctx, getLink, shortPath)
 	var i Link
@@ -36,6 +40,9 @@ type InsertLinkParams struct {
 	OriginalUrl string
 }
 
+// InsertLink
+//
+//	INSERT INTO links (short_path, original_url) VALUES ($1, $2)
 func (q *Queries) InsertLink(ctx context.Context, arg InsertLinkParams) error {
 	_, err := q.db.Exec(ctx, insertLink, arg.ShortPath, arg.OriginalUrl)
 	return err
