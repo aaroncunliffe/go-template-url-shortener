@@ -29,7 +29,7 @@ func Logger(logger *slog.Logger) func(http.Handler) http.Handler {
 				"scheme", scheme,
 				"method", r.Method,
 				"request", fmt.Sprintf("%s%s", r.Host, r.RequestURI),
-				"proto", r.Proto,
+				"protocol", r.Proto,
 			)
 
 			// Handler
@@ -40,7 +40,7 @@ func Logger(logger *slog.Logger) func(http.Handler) http.Handler {
 				"timestamp", time.Now().Format(time.RFC3339),
 				"status", ww.Status(),
 				"bytes", ww.BytesWritten(),
-				"duration", time.Since(t1),
+				"duration", time.Since(t1).Seconds(),
 			)
 		})
 	}

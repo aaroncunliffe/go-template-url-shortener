@@ -84,19 +84,9 @@ func main() {
 		defer db.Close()
 	}()
 
-	///
-
-	q := database.New(db)
-	link, err := q.GetLink(ctx, "test")
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "GetLink failed: %v\n", err)
-		os.Exit(1)
-	}
-
-	logger.Info(fmt.Sprintf("got link: %+v", link))
-
 	api := api.NewAPI(api.Config{
 		Logger: logger,
+		DB:     database.New(db),
 	})
 
 	server := &http.Server{
@@ -128,7 +118,7 @@ func main() {
 	cancel()
 
 	// Create new context to attempt graceful shutdown
-	shutdownCtx, shutdownCancel := context.WithTimeout(context.Background(), 5*time.Second)
+	shutdownCtx, shutdownCancel := context.WithTimeout(context.Background(), 20*time.Second)
 	defer shutdownCancel()
 
 	exitCode := 0

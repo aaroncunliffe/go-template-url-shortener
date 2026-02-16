@@ -1,6 +1,7 @@
 package api
 
 import (
+	"aaroncunliffe/url-shortener/internal/database"
 	"aaroncunliffe/url-shortener/internal/web/middleware"
 	"log/slog"
 	"net/http"
@@ -12,6 +13,7 @@ import (
 
 type Config struct {
 	Logger *slog.Logger
+	DB     *database.Queries
 }
 
 func NewAPI(config Config) http.Handler {
@@ -25,7 +27,7 @@ func NewAPI(config Config) http.Handler {
 	// https://github.com/go-chi/cors
 
 	// Attach routes
-	routes(mux)
+	routes(mux, config)
 
 	return mux
 }
