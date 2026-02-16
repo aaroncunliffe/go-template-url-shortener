@@ -26,13 +26,16 @@ type config struct {
 	DBUser  string `env:"DB_USER" envDefault:"postgres"`
 	DBPass  string `env:"DB_PASS" envDefault:"password"`
 	DBName  string `env:"DB_NAME" envDefault:"postgres"`
-	DBHost  string `env:"DB_HOST" envDefault:"localhost"`
+	DBHost  string `env:"DB_HOST" envDefault:"db"`
 	DBPort  string `env:"DB_PORT" envDefault:"5432"`
 	WebPort string `env:"WEB_PORT" envDefault:"8081"`
 }
 
 func main() {
-	logger := logging.NewHumanReadableLogger()
+	logger := logging.NewJsonLogger()
+	if version == "local" {
+		logger = logging.NewHumanReadableLogger()
+	}
 
 	// =========================================================================
 	// Startup

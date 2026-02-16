@@ -1,6 +1,14 @@
-version: '3.8'
-
 services:
+  api:
+    build:
+      context: ../../.
+      dockerfile: configs/docker/dockerfile.dev
+    ports:
+      - 8081:8081
+    volumes:
+      - ../../.:/app
+    depends_on:
+      - db
   db:
     image: postgres:15-alpine  
     container_name: postgres_db

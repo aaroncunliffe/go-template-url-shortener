@@ -1,6 +1,6 @@
 module aaroncunliffe/url-shortener
 
-go 1.23
+go 1.26
 
 require (
 	github.com/caarlos0/env v3.5.0+incompatible
