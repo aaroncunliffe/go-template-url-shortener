@@ -9,17 +9,17 @@ import (
 	"context"
 )
 
-const getLink = `-- name: GetLink :one
+const getLinkByPath = `-- name: GetLinkByPath :one
 SELECT id, short_path, original_url, created_at, updated_at FROM links
 WHERE short_path = $1
 `
 
-// GetLink
+// GetLinkByPath
 //
 //	SELECT id, short_path, original_url, created_at, updated_at FROM links
 //	WHERE short_path = $1
-func (q *Queries) GetLink(ctx context.Context, shortPath string) (Link, error) {
-	row := q.db.QueryRow(ctx, getLink, shortPath)
+func (q *Queries) GetLinkByPath(ctx context.Context, shortPath string) (Link, error) {
+	row := q.db.QueryRow(ctx, getLinkByPath, shortPath)
 	var i Link
 	err := row.Scan(
 		&i.ID,

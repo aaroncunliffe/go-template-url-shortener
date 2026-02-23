@@ -3,6 +3,9 @@ package api
 import (
 	"aaroncunliffe/url-shortener/api/links"
 
+	linksCore "aaroncunliffe/url-shortener/internal/business/links"
+	"aaroncunliffe/url-shortener/internal/business/links/pgstore"
+
 	"github.com/go-chi/chi"
 )
 
@@ -11,14 +14,16 @@ import (
 func routes(mux *chi.Mux, config Config) {
 
 	linksHandler := links.Handler{
-		DB:     config.DB,
 		Logger: config.Logger,
+		Links: linksCore.Core{
+			Logger: config.Logger,
+			Store:  pgstore.PGStore{DB: config.DB},
+		},
 	}
 	mux.Get("/{path}", linksHandler.LinkRedirect)
 
 	// api
-	mux.Route("/api", func(r chi.Router) {
-		// Individual REST API Routes here
-	})
+	// Individual REST API Routes here
+	// mux.Post("/api/link", linksHandler.CreateLink)
 
 }

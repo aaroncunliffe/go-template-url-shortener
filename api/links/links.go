@@ -1,14 +1,11 @@
 package links
 
 import (
-	"aaroncunliffe/url-shortener/internal/database"
-	"context"
-	"errors"
+	"aaroncunliffe/url-shortener/internal/business/links"
 	"log/slog"
 	"net/http"
 
 	"github.com/go-chi/chi"
-	"github.com/jackc/pgx/v5"
 )
 
 // Combined validation and business logic
@@ -16,7 +13,7 @@ import (
 
 type Handler struct {
 	Logger *slog.Logger
-	DB     *database.Queries
+	Links  links.Core
 }
 
 func (h Handler) LinkRedirect(w http.ResponseWriter, r *http.Request) {
@@ -24,21 +21,13 @@ func (h Handler) LinkRedirect(w http.ResponseWriter, r *http.Request) {
 
 	h.Logger.Info("looking up url for path", slog.String("path", path))
 
-	link, err := h.DB.GetLink(context.Background(), path)
+	redirect, err := h.Links.ResolveLink(path)
 	if err != nil {
-		if errors.Is(err, pgx.ErrNoRows) {
-			h.Logger.Warn(err.Error())
-			w.WriteHeader(404)
-			return
-		}
-		h.Logger.Error(err.Error())
-	}
-
-	if (link == database.Link{}) {
-		w.WriteHeader(404)
+		w.WriteHeader(http.StatusBadRequest)
+		h.Logger.Error("%w", err)
 		return
 	}
 
-	h.Logger.Info("performing redirect", slog.String("path", path), slog.String("redirect", link.OriginalUrl))
-	http.Redirect(w, r, link.OriginalUrl, 302)
+	h.Logger.Info("performing redirect", slog.String("path", path), slog.String("redirect", redirect))
+	http.Redirect(w, r, redirect, http.StatusFound)
 }
