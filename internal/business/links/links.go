@@ -19,8 +19,8 @@ type Storer interface {
 	InsertLink(ctx context.Context, shortPath string, originalURL string) error
 }
 
-func (h Core) ResolveLink(path string) (string, error) {
-	link, err := h.Store.GetLinkByPath(context.Background(), path)
+func (h Core) ResolveLink(ctx context.Context, path string) (string, error) {
+	link, err := h.Store.GetLinkByPath(ctx, path)
 	if err != nil {
 		return "", err
 	}

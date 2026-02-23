@@ -21,7 +21,7 @@ func (h Handler) LinkRedirect(w http.ResponseWriter, r *http.Request) {
 
 	h.Logger.Info("looking up url for path", slog.String("path", path))
 
-	redirect, err := h.Links.ResolveLink(path)
+	redirect, err := h.Links.ResolveLink(r.Context(), path)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		h.Logger.Error("%w", err)
