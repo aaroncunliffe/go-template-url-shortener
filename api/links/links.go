@@ -2,6 +2,8 @@ package links
 
 import (
 	"aaroncunliffe/url-shortener/internal/business/links"
+	"aaroncunliffe/url-shortener/internal/web"
+	"errors"
 	"log/slog"
 	"net/http"
 
@@ -23,8 +25,14 @@ func (h Handler) LinkRedirect(w http.ResponseWriter, r *http.Request) {
 
 	redirect, err := h.Links.ResolveLink(r.Context(), path)
 	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		h.Logger.Error("%w", err)
+
+		// Not found
+		if errors.As(err, &links.ErrNotFound) {
+			web.ErrorJSON(w, http.StatusNotFound, err.Error())
+		}
+
+		h.Logger.Error("resolve link", "error", err)
+		web.ErrorJSON(w, http.StatusBadRequest, err.Error())
 		return
 	}
 
