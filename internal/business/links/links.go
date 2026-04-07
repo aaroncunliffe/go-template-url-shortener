@@ -26,3 +26,12 @@ func (h Core) ResolveLink(ctx context.Context, path string) (string, error) {
 	}
 	return link.OriginalUrl, nil
 }
+
+func (h Core) CreateLink(ctx context.Context, shorthPath string, originURL string) (string, error) {
+	err := h.Store.InsertLink(ctx, shorthPath, originURL)
+	if err != nil {
+		return "", err
+	}
+
+	return shorthPath, nil
+}

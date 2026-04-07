@@ -22,8 +22,8 @@ func routes(mux *chi.Mux, config Config) {
 	}
 	mux.Get("/{path}", linksHandler.LinkRedirect)
 
-	// api
+	// API
 	// Individual REST API Routes here
-	// mux.Post("/api/link", linksHandler.CreateLink)
+	mux.Post("/api/link", linksHandler.CreateLink)
 
 }
