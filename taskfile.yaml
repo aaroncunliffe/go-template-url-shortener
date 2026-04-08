@@ -1,10 +1,17 @@
 version: '3'
 dotenv: ['.env']
 tasks:
-  # add vet
   run:
     cmds:
     - go run cmd/main.go
+  test:
+    cmds:
+    - go vet ./...
+    - go test ./...
+  testv:
+    cmds:
+    - go vet ./...
+    - go test ./... -v
   build:
     vars:
       VERSION: 0.0.1
