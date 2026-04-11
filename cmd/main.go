@@ -27,7 +27,6 @@ type config struct {
 	DBPass  string `env:"DB_PASS" envDefault:"password"`
 	DBName  string `env:"DB_NAME" envDefault:"postgres"`
 	DBHost  string `env:"DB_HOST" envDefault:"db"`
-	DBPort  string `env:"DB_PORT" envDefault:"5432"`
 	WebPort string `env:"WEB_PORT" envDefault:"8081"`
 }
 

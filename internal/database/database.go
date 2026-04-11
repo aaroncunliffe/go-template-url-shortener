@@ -31,15 +31,15 @@ func Open(ctx context.Context, cfg Config) (*pgxpool.Pool, error) {
 		RawQuery: q.Encode(),
 	}
 
-	conn, err := pgxpool.New(ctx, u.String())
+	pool, err := pgxpool.New(ctx, u.String())
 	if err != nil {
 		return nil, err
 	}
 
 	// Test connection
-	if err := conn.Ping(ctx); err != nil {
+	if err := pool.Ping(ctx); err != nil {
 		return nil, err
 	}
 
-	return conn, nil
+	return pool, nil
 }

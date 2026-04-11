@@ -27,12 +27,12 @@ func (h Handler) LinkRedirect(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		// Not found
 		if errors.Is(err, links.ErrNotFound) {
-			web.ErrorJSON(w, http.StatusNotFound, err.Error())
+			http.NotFound(w, r)
 			return
 		}
 
 		h.Logger.Error("resolve link", "error", err)
-		web.ErrorJSON(w, http.StatusInternalServerError, "internal server error")
+		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 		return
 	}
 
@@ -66,10 +66,9 @@ func (h Handler) CreateLink(w http.ResponseWriter, r *http.Request) {
 		}
 
 		h.Logger.Error("create link", "error", err)
-		web.ErrorJSON(w, http.StatusInternalServerError, "internal server error")
+		web.ErrorJSON(w, http.StatusInternalServerError, http.StatusText(http.StatusInternalServerError))
 		return
 	}
 
 	web.JSON(w, http.StatusCreated, CreateLinkResponse{ShortPath: shortPath})
-	return
 }

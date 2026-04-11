@@ -128,7 +128,6 @@ func TestLinksRedirect(t *testing.T) {
 			seed             *database.InsertLinkParams
 			expectedStatus   int
 			expectedLocation string
-			expectErrorBody  bool
 		}{
 			{
 				name: "success",
@@ -141,10 +140,9 @@ func TestLinksRedirect(t *testing.T) {
 				expectedLocation: "https://aaroncunliffe.dev/redirect",
 			},
 			{
-				name:            "not found",
-				path:            "missing-link",
-				expectedStatus:  http.StatusNotFound,
-				expectErrorBody: true,
+				name:           "not found",
+				path:           "missing-link",
+				expectedStatus: http.StatusNotFound,
 			},
 		}
 
@@ -185,18 +183,6 @@ func TestLinksRedirect(t *testing.T) {
 				if tt.expectedLocation != "" {
 					if location := resp.Header.Get("Location"); location != tt.expectedLocation {
 						t.Fatalf("expected redirect location %q, got %q", tt.expectedLocation, location)
-					}
-				}
-
-				// Error body check
-				if tt.expectErrorBody {
-					var body responseEnvelope[any]
-					if err := json.NewDecoder(resp.Body).Decode(&body); err != nil {
-						t.Fatalf("decode error response: %v", err)
-					}
-
-					if body.Error == nil || body.Error.Message == "" {
-						t.Fatal("expected error response body")
 					}
 				}
 			})
