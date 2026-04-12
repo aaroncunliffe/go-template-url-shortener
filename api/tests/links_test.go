@@ -1,13 +1,14 @@
 package links_test
 
 import (
-	apilinks "aaroncunliffe/url-shortener/api/links"
-	"aaroncunliffe/url-shortener/internal/database"
-	"aaroncunliffe/url-shortener/internal/web"
 	"encoding/json"
 	"net/http"
 	"strings"
 	"testing"
+
+	apilinks "github.com/aaroncunliffe/go-template-url-shortener/api/links"
+	"github.com/aaroncunliffe/go-template-url-shortener/internal/database"
+	"github.com/aaroncunliffe/go-template-url-shortener/internal/web"
 )
 
 // Expected API response contract

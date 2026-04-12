@@ -1,9 +1,6 @@
 package main
 
 import (
-	"aaroncunliffe/url-shortener/api"
-	"aaroncunliffe/url-shortener/internal/database"
-	"aaroncunliffe/url-shortener/internal/logging"
 	"context"
 	"fmt"
 	"net/http"
@@ -11,6 +8,10 @@ import (
 	"os/signal"
 	"syscall"
 	"time"
+
+	"github.com/aaroncunliffe/go-template-url-shortener/api"
+	"github.com/aaroncunliffe/go-template-url-shortener/internal/database"
+	"github.com/aaroncunliffe/go-template-url-shortener/internal/logging"
 
 	"github.com/caarlos0/env"
 	"github.com/joho/godotenv"

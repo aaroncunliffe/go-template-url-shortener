@@ -1,10 +1,11 @@
 package pgstore
 
 import (
-	"aaroncunliffe/url-shortener/internal/business/links"
-	"aaroncunliffe/url-shortener/internal/database"
 	"context"
 	"errors"
+
+	"github.com/aaroncunliffe/go-template-url-shortener/internal/business/links"
+	"github.com/aaroncunliffe/go-template-url-shortener/internal/database"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"

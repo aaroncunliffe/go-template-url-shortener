@@ -1,9 +1,10 @@
 package links
 
 import (
-	"aaroncunliffe/url-shortener/internal/database"
 	"context"
 	"log/slog"
+
+	"github.com/aaroncunliffe/go-template-url-shortener/internal/database"
 )
 
 type Core struct {

@@ -1,10 +1,10 @@
 package api
 
 import (
-	"aaroncunliffe/url-shortener/api/links"
+	"github.com/aaroncunliffe/go-template-url-shortener/api/links"
 
-	linksCore "aaroncunliffe/url-shortener/internal/business/links"
-	"aaroncunliffe/url-shortener/internal/business/links/pgstore"
+	linksCore "github.com/aaroncunliffe/go-template-url-shortener/internal/business/links"
+	"github.com/aaroncunliffe/go-template-url-shortener/internal/business/links/pgstore"
 
 	"github.com/go-chi/chi"
 )

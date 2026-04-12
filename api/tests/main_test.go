@@ -1,8 +1,6 @@
 package links_test
 
 import (
-	"aaroncunliffe/url-shortener/api"
-	"aaroncunliffe/url-shortener/internal/database"
 	"context"
 	"fmt"
 	"io"
@@ -11,6 +9,9 @@ import (
 	"os"
 	"testing"
 	"time"
+
+	"github.com/aaroncunliffe/go-template-url-shortener/api"
+	"github.com/aaroncunliffe/go-template-url-shortener/internal/database"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/testcontainers/testcontainers-go"

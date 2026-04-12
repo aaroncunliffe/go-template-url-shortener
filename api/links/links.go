@@ -1,11 +1,12 @@
 package links
 
 import (
-	"aaroncunliffe/url-shortener/internal/business/links"
-	"aaroncunliffe/url-shortener/internal/web"
 	"errors"
 	"log/slog"
 	"net/http"
+
+	"github.com/aaroncunliffe/go-template-url-shortener/internal/business/links"
+	"github.com/aaroncunliffe/go-template-url-shortener/internal/web"
 
 	"github.com/go-chi/chi"
 )

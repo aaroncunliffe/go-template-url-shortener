@@ -1,4 +1,4 @@
-module aaroncunliffe/url-shortener
+module github.com/aaroncunliffe/go-template-url-shortener
 
 go 1.26
 

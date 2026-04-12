@@ -1,10 +1,11 @@
 package api
 
 import (
-	"aaroncunliffe/url-shortener/internal/database"
-	"aaroncunliffe/url-shortener/internal/web/middleware"
 	"log/slog"
 	"net/http"
+
+	"github.com/aaroncunliffe/go-template-url-shortener/internal/database"
+	"github.com/aaroncunliffe/go-template-url-shortener/internal/web/middleware"
 
 	"github.com/go-chi/chi"
 )
