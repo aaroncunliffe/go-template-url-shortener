@@ -27,7 +27,7 @@ tasks:
     - docker compose -f configs/docker/compose.yaml up
   docker-compose-down:
     cmds:
-    - docker compose -f configs/docker/compose.yaml down --rmi
+    - docker compose -f configs/docker/compose.yaml down --rmi local --volumes
   db-inspect:
     cmds:
     - atlas schema inspect 

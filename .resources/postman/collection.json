@@ -1,1 +1,58 @@
-{}
+{
+  "info": {
+    "_postman_id": "c88d2843-2400-4d18-b827-fb931e5e3c72",
+    "name": "url-shortener",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "7299591"
+  },
+  "item": [
+    {
+      "name": "links",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:8081/abcd",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "8081",
+          "path": [
+            "abcd"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "create link",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n    \"short_path\": \"abcd\",\n    \"origin_url\": \"https://aaroncunliffe.dev\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "http://localhost:8081/api/link",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "8081",
+          "path": [
+            "api",
+            "link"
+          ]
+        }
+      },
+      "response": []
+    }
+  ]
+}
