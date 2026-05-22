@@ -2,6 +2,7 @@ package links
 
 import (
 	"errors"
+	"fmt"
 	"log/slog"
 	"net/http"
 
@@ -19,57 +20,43 @@ type Handler struct {
 	Links  links.Core
 }
 
-func (h Handler) LinkRedirect(w http.ResponseWriter, r *http.Request) {
+func (h Handler) LinkRedirect(w http.ResponseWriter, r *http.Request) error {
 	path := chi.URLParam(r, "path")
-
 	h.Logger.Info("looking up url for path", slog.String("path", path))
 
 	redirect, err := h.Links.ResolveLink(r.Context(), path)
 	if err != nil {
-		// Not found
 		if errors.Is(err, links.ErrNotFound) {
-			http.NotFound(w, r)
-			return
+			return web.NewRequestError(http.StatusNotFound, links.ErrNotFound, web.Trusted)
 		}
-
-		h.Logger.Error("resolve link", "error", err)
-		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
-		return
+		return fmt.Errorf("resolving link: %w", err)
 	}
 
 	h.Logger.Info("performing redirect", slog.String("path", path), slog.String("redirect", redirect))
 	http.Redirect(w, r, redirect, http.StatusFound)
+	return nil
 }
 
-func (h Handler) CreateLink(w http.ResponseWriter, r *http.Request) {
-
+func (h Handler) CreateLink(w http.ResponseWriter, r *http.Request) error {
 	var input CreateLinkRequest
-	err := web.DecodeJSON(r, &input)
-	if err != nil {
-		h.Logger.Error("decode json", "error", err)
-		web.ErrorJSON(w, http.StatusBadRequest, err.Error())
-		return
+	if err := web.DecodeJSON(r, &input); err != nil {
+		return web.NewRequestError(http.StatusBadRequest, fmt.Errorf("decode %w", err), web.Untrusted)
 	}
 
-	err = web.ValidateStruct(input)
-	if err != nil {
-		h.Logger.Error("validate struct", "error", err)
-		web.ErrorJSON(w, http.StatusBadRequest, err.Error())
-		return
+	if err := web.ValidateStruct(input); err != nil {
+		return web.NewRequestError(http.StatusBadRequest, fmt.Errorf("validating struct %w", err), web.Untrusted)
 	}
 
+	// Create link
 	h.Logger.Info("creating link", slog.String("origin", input.OriginURL))
 	shortPath, err := h.Links.CreateLink(r.Context(), input.ShortPath, input.OriginURL)
 	if err != nil {
 		if errors.Is(err, links.ErrConflict) {
-			web.ErrorJSON(w, http.StatusConflict, err.Error())
-			return
+			return web.NewRequestError(http.StatusConflict, links.ErrConflict, web.Trusted)
 		}
-
-		h.Logger.Error("create link", "error", err)
-		web.ErrorJSON(w, http.StatusInternalServerError, http.StatusText(http.StatusInternalServerError))
-		return
+		return fmt.Errorf("creating link: %w", err)
 	}
 
 	web.JSON(w, http.StatusCreated, CreateLinkResponse{ShortPath: shortPath})
+	return nil
 }
