@@ -24,12 +24,14 @@ func TestCreateLinks(t *testing.T) {
 		env := integrationEnvForTest(t)
 
 		tests := []struct {
-			name              string
-			body              string
-			seed              *database.InsertLinkParams
-			expectedStatus    int
-			expectedShortPath string
-			expectErrorBody   bool
+			name                   string
+			body                   string
+			seed                   *database.InsertLinkParams
+			expectedStatus         int
+			expectedShortPath      string
+			expectErrorBody        bool
+			expectedErrorBody      string
+			expectGenericErrorBody bool
 		}{
 			{
 				name:              "success",
@@ -50,7 +52,7 @@ func TestCreateLinks(t *testing.T) {
 				expectErrorBody: true,
 			},
 			{
-				name: "conflict from database",
+				name: "link already taken",
 				body: `{"short_path":"already-taken","origin_url":"https://aaroncunliffe.dev"}`,
 				seed: &database.InsertLinkParams{
 					ShortPath:   "already-taken",
@@ -58,6 +60,13 @@ func TestCreateLinks(t *testing.T) {
 				},
 				expectedStatus:  http.StatusConflict,
 				expectErrorBody: true,
+			},
+			{
+				name:                   "malformed request gives generic error",
+				body:                   `{"short_path":"`,
+				expectedStatus:         http.StatusBadRequest,
+				expectErrorBody:        true,
+				expectGenericErrorBody: true,
 			},
 		}
 
@@ -97,6 +106,13 @@ func TestCreateLinks(t *testing.T) {
 
 					if body.Error == nil || body.Error.Message == "" {
 						t.Fatal("expected error response body")
+					}
+
+					if tt.expectGenericErrorBody && body.Error.Message != http.StatusText(resp.StatusCode) {
+						t.Fatalf("expected generic error message with text %s, got %s",
+							http.StatusText(resp.StatusCode),
+							body.Error.Message,
+						)
 					}
 
 					return
