@@ -12,9 +12,6 @@ import (
 	"github.com/go-chi/chi/v5"
 )
 
-// Combined validation and business logic
-// In larger apps business logic should be abstracted to internal
-
 type Handler struct {
 	Logger *slog.Logger
 	Links  links.Core

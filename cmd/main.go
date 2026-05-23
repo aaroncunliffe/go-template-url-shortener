@@ -12,6 +12,7 @@ import (
 	"github.com/aaroncunliffe/go-template-url-shortener/api"
 	"github.com/aaroncunliffe/go-template-url-shortener/internal/database"
 	"github.com/aaroncunliffe/go-template-url-shortener/internal/logging"
+	"github.com/aaroncunliffe/go-template-url-shortener/internal/web/debug"
 
 	"github.com/caarlos0/env"
 	"github.com/joho/godotenv"
@@ -24,11 +25,12 @@ var version string = "local"
 var buildDate string = "now"
 
 type config struct {
-	DBUser  string `env:"DB_USER" envDefault:"postgres"`
-	DBPass  string `env:"DB_PASS" envDefault:"password"`
-	DBName  string `env:"DB_NAME" envDefault:"postgres"`
-	DBHost  string `env:"DB_HOST" envDefault:"db"`
-	WebPort string `env:"WEB_PORT" envDefault:"8081"`
+	DBUser    string `env:"DB_USER" envDefault:"postgres"`
+	DBPass    string `env:"DB_PASS" envDefault:"password"`
+	DBName    string `env:"DB_NAME" envDefault:"postgres"`
+	DBHost    string `env:"DB_HOST" envDefault:"db"`
+	WebPort   string `env:"WEB_PORT" envDefault:"8080"`
+	DebugPort string `env:"DEBUG_PORT" envDefault:"4040"`
 }
 
 func main() {
@@ -84,6 +86,23 @@ func main() {
 		defer db.Close()
 	}()
 
+	// -------------------------------------------------------------------------
+	// Start Debug Service
+	go func() {
+		debugServer := &http.Server{
+			Addr:              fmt.Sprintf(":%s", cfg.DebugPort),
+			Handler:           debug.NewAPI(version, logger, db),
+			ReadHeaderTimeout: 5 * time.Second,
+		}
+
+		// No graceful shutdown intentional
+		if err := debugServer.ListenAndServe(); err != nil {
+			logger.Info("shutdown", "status", "debug router closed", "host", cfg.DebugPort, "error", err)
+		}
+	}()
+
+	// -------------------------------------------------------------------------
+	// Start API Service
 	api := api.NewAPI(api.Config{
 		Logger: logger,
 		DB:     database.New(db),

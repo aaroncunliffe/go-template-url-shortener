@@ -63,7 +63,7 @@ This project currently uses:
 Examples using `task`:
 
 ```bash
-task docker-compose-up # runs API on localhost:8081
+task docker-compose-up # runs API on localhost:8080
 ```
 Then run API requests in the [postman collection](.resources/postman/collection.json)
 
@@ -84,11 +84,12 @@ task db-migrate # apply schema file to DB
 #### Application
 - [x] Integration tests
 - [ ] Custom validator error messages
-- [ ] Centralised middleware for error handling
+- [x] Centralised middleware for error handling
 - [ ] Sensible automatic short path generation
 
 #### Other / Misc
-- [ ] K3D - Kubernetes example manifests
+- [ ] Full Docker Compose setup for observability and monitoring
+  - [ ] K3D - local Kubernetes
 - [ ] Tracing for better observability
-- [ ] Run golangci-lint - Also run as a CI stage
-- [ ] Security scanning in pipeline
+- [x] Run golangci-lint - Also run as a CI stage
+- [x] Security scanning in pipeline

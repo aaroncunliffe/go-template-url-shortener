@@ -1,7 +1,6 @@
 package middleware
 
 import (
-	"fmt"
 	"net/http"
 	"time"
 
@@ -25,10 +24,10 @@ func Logger(logger *slog.Logger) func(http.Handler) http.Handler {
 			}
 
 			logger.Info("request",
-				"timestamp", time.Now().Format(time.RFC3339),
+				"path", r.RequestURI,
 				"scheme", scheme,
 				"method", r.Method,
-				"request", fmt.Sprintf("%s%s", r.Host, r.RequestURI),
+
 				"protocol", r.Proto,
 			)
 
@@ -36,8 +35,8 @@ func Logger(logger *slog.Logger) func(http.Handler) http.Handler {
 			next.ServeHTTP(ww, r)
 
 			// Out
-			logger.Info("response",
-				"timestamp", time.Now().Format(time.RFC3339),
+			logger.Info("request completed",
+				"path", r.RequestURI,
 				"status", ww.Status(),
 				"bytes", ww.BytesWritten(),
 				"duration", time.Since(t1).Seconds(),

@@ -4,9 +4,12 @@ services:
       context: ../../.
       dockerfile: configs/docker/dockerfile.dev
     ports:
-      - 8081:8081
+      - 8080:8080 # web
+      - 4040:4040 # debug
     volumes:
       - ../../.:/app
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:4040/debug/readiness"]
     depends_on:
       - db
   db:

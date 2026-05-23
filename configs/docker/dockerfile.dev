@@ -3,6 +3,7 @@ FROM golang:${GO_VERSION}-alpine
 
 WORKDIR /app
 
+RUN apk add --no-cache curl
 RUN go install github.com/air-verse/air@latest
 
 COPY go.mod go.sum ./

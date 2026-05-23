@@ -12,12 +12,12 @@
         "method": "GET",
         "header": [],
         "url": {
-          "raw": "http://localhost:8081/abcd",
+          "raw": "http://localhost:8080/abcd",
           "protocol": "http",
           "host": [
             "localhost"
           ],
-          "port": "8081",
+          "port": "8080",
           "path": [
             "abcd"
           ]
@@ -40,12 +40,12 @@
           }
         },
         "url": {
-          "raw": "http://localhost:8081/api/link",
+          "raw": "http://localhost:8080/api/link",
           "protocol": "http",
           "host": [
             "localhost"
           ],
-          "port": "8081",
+          "port": "8080",
           "path": [
             "api",
             "link"
