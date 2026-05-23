@@ -109,7 +109,7 @@ func TestCreateLinks(t *testing.T) {
 					}
 
 					if tt.expectGenericErrorBody && body.Error.Message != http.StatusText(resp.StatusCode) {
-						t.Fatalf("expected generic error message with text %s, got %s",
+						t.Fatalf("expected generic error message with text %q, got %q",
 							http.StatusText(resp.StatusCode),
 							body.Error.Message,
 						)

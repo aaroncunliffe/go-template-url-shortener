@@ -92,7 +92,8 @@ func main() {
 	server := &http.Server{
 		Addr:    fmt.Sprintf(":%s", cfg.WebPort),
 		Handler: api,
-		// Defaults for Timeouts should be considered in production
+		// Timeouts should be considered in production
+		ReadHeaderTimeout: 5 * time.Second,
 	}
 
 	// Channel specifically for server errors

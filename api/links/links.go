@@ -9,7 +9,7 @@ import (
 	"github.com/aaroncunliffe/go-template-url-shortener/internal/business/links"
 	"github.com/aaroncunliffe/go-template-url-shortener/internal/web"
 
-	"github.com/go-chi/chi"
+	"github.com/go-chi/chi/v5"
 )
 
 // Combined validation and business logic
@@ -32,7 +32,15 @@ func (h Handler) LinkRedirect(w http.ResponseWriter, r *http.Request) error {
 		return fmt.Errorf("resolving link: %w", err)
 	}
 
+	// Sensible check for DB tampering
+	if err := web.ValidRedirectURL(redirect); err != nil {
+		return web.NewRequestError(http.StatusBadRequest, err, web.Untrusted)
+	}
+
 	h.Logger.Info("performing redirect", slog.String("path", path), slog.String("redirect", redirect))
+
+	// Validated above, redirect here is intentional
+	//nolint:gosec
 	http.Redirect(w, r, redirect, http.StatusFound)
 	return nil
 }

@@ -2,7 +2,9 @@ package web
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
+	"net/url"
 
 	"github.com/go-playground/validator/v10"
 )
@@ -25,4 +27,15 @@ func DecodeJSON(r *http.Request, dest any) error {
 
 func ValidateStruct(s any) error {
 	return v.Struct(s)
+}
+
+func ValidRedirectURL(rawURL string) error {
+	parsed, err := url.Parse(rawURL)
+	if err != nil {
+		return fmt.Errorf("parse: %w", err)
+	}
+	if parsed.Scheme != "http" && parsed.Scheme != "https" {
+		return fmt.Errorf("scheme %q not allowed", parsed.Scheme)
+	}
+	return nil
 }

@@ -1,0 +1,31 @@
+version: "2"
+
+formatters:
+  enable:
+    - gofmt
+
+linters:
+  enable:
+    - errcheck
+    - govet
+    - staticcheck
+    - nilerr
+    - unused
+    - gosec
+    - bodyclose
+    - sqlclosecheck
+    - errorlint
+    - noctx
+    - nolintlint
+    - prealloc
+    - goconst
+  settings:
+    # Happy to accept these
+    gosec:
+      excludes:
+        - G104
+    errcheck:
+      exclude-functions:
+        - (io.Closer).Close
+        - (*encoding/json.Encoder).Encode
+        - github.com/testcontainers/testcontainers-go.TerminateContainer

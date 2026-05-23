@@ -7,7 +7,7 @@ import (
 
 	"log/slog"
 
-	"github.com/go-chi/chi/middleware"
+	"github.com/go-chi/chi/v5/middleware"
 )
 
 // Custom Logger middleware that supports slog for uniform logging

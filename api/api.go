@@ -8,7 +8,7 @@ import (
 	"github.com/aaroncunliffe/go-template-url-shortener/internal/web"
 	"github.com/aaroncunliffe/go-template-url-shortener/internal/web/middleware"
 
-	"github.com/go-chi/chi"
+	"github.com/go-chi/chi/v5"
 )
 
 // Set up API with dependencies to be passed to required handlers
