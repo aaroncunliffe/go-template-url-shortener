@@ -30,6 +30,9 @@ tasks:
   docker-compose-down:
     cmds:
     - docker compose -f configs/docker/compose.yaml down --rmi local --volumes
+  statviz:
+    cmds:
+    - open http://localhost:4040/debug/statsviz/ # macos specific
   db-inspect:
     cmds:
     - atlas schema inspect 

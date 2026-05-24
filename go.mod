@@ -3,6 +3,7 @@ module github.com/aaroncunliffe/go-template-url-shortener
 go 1.26
 
 require (
+	github.com/arl/statsviz v0.8.0
 	github.com/caarlos0/env v3.5.0+incompatible
 	github.com/charmbracelet/log v0.4.0
 	github.com/go-chi/chi/v5 v5.3.0
@@ -42,6 +43,7 @@ require (
 	github.com/go-playground/locales v0.14.1 // indirect
 	github.com/go-playground/universal-translator v0.18.1 // indirect
 	github.com/google/uuid v1.6.0 // indirect
+	github.com/gorilla/websocket v1.5.3 // indirect
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.28.0 // indirect
 	github.com/jackc/pgpassfile v1.0.0 // indirect
 	github.com/jackc/pgservicefile v0.0.0-20221227161230-091c0ba34f0a // indirect

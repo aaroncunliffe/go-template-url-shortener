@@ -2,15 +2,35 @@ package debug
 
 import (
 	"errors"
+	"expvar"
 	"log/slog"
 	"net/http"
+	"net/http/pprof"
 
+	"github.com/arl/statsviz"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-// Creates a standard approach for a debug interface
-func NewAPI(build string, logger *slog.Logger, db *pgxpool.Pool) http.Handler {
+// Creates a standard mux for internal use
+// Healthchecks - readiness / liveness
+// debugging / performance profiling - pprof, expvar, and statviz
+func NewAPI(logger *slog.Logger, db *pgxpool.Pool) http.Handler {
 	mux := http.NewServeMux() // Don't need chi here
+
+	// pprof
+	mux.HandleFunc("/debug/pprof", pprof.Index)
+	mux.HandleFunc("/debug/pprof/cmdline", pprof.Cmdline)
+	mux.HandleFunc("/debug/pprof/profile", pprof.Profile)
+	mux.HandleFunc("/debug/pprof/symbol", pprof.Symbol)
+	mux.HandleFunc("/debug/pprof/trace", pprof.Trace)
+
+	// expvar
+	mux.Handle("/debug/vars", expvar.Handler())
+
+	// Statviz tool
+	if err := statsviz.Register(mux); err != nil {
+		logger.Error("registering statviz failed", "error", err)
+	}
 
 	// Basic health check
 	mux.HandleFunc("/debug/liveness", func(w http.ResponseWriter, r *http.Request) {
@@ -49,7 +69,7 @@ func NewAPI(build string, logger *slog.Logger, db *pgxpool.Pool) http.Handler {
 	return mux
 }
 
-// Own simple response format
+// Simple response format
 func response(statusCode int, w http.ResponseWriter) {
 	w.WriteHeader(statusCode)
 	_, _ = w.Write([]byte(http.StatusText(statusCode)))

@@ -88,10 +88,11 @@ func main() {
 
 	// -------------------------------------------------------------------------
 	// Start Debug Service
+	// Internal only endpoint for healthchecks, debugging, and performance profiling
 	go func() {
 		debugServer := &http.Server{
 			Addr:              fmt.Sprintf(":%s", cfg.DebugPort),
-			Handler:           debug.NewAPI(version, logger, db),
+			Handler:           debug.NewAPI(logger, db),
 			ReadHeaderTimeout: 5 * time.Second,
 		}
 
