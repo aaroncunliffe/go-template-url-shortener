@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"net/http/pprof"
 
+	"github.com/aaroncunliffe/go-template-url-shortener/internal/telemetry"
 	"github.com/arl/statsviz"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
@@ -14,8 +15,8 @@ import (
 // Creates a standard mux for internal use
 // Healthchecks - readiness / liveness
 // debugging / performance profiling - pprof, expvar, and statviz
-func NewAPI(logger *slog.Logger, db *pgxpool.Pool) http.Handler {
-	mux := http.NewServeMux() // Don't need chi here
+func NewAPI(logger *slog.Logger, db *pgxpool.Pool, tel *telemetry.Telemetry) http.Handler {
+	mux := http.NewServeMux()
 
 	// pprof
 	mux.HandleFunc("/debug/pprof", pprof.Index)
@@ -24,22 +25,20 @@ func NewAPI(logger *slog.Logger, db *pgxpool.Pool) http.Handler {
 	mux.HandleFunc("/debug/pprof/symbol", pprof.Symbol)
 	mux.HandleFunc("/debug/pprof/trace", pprof.Trace)
 
-	// expvar
 	mux.Handle("/debug/vars", expvar.Handler())
 
-	// Statviz tool
 	if err := statsviz.Register(mux); err != nil {
 		logger.Error("registering statviz failed", "error", err)
 	}
 
+	mux.Handle("/debug/metrics", tel.MetricsHandler())
+
 	// Basic health check
 	mux.HandleFunc("/debug/liveness", func(w http.ResponseWriter, r *http.Request) {
-
 		logger.Info("request",
 			"path", r.RequestURI,
 			"protocol", r.Proto,
 		)
-
 		response(http.StatusOK, w)
 	})
 

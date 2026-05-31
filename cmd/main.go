@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net/http"
 	"os"
@@ -12,6 +13,7 @@ import (
 	"github.com/aaroncunliffe/go-template-url-shortener/api"
 	"github.com/aaroncunliffe/go-template-url-shortener/internal/database"
 	"github.com/aaroncunliffe/go-template-url-shortener/internal/logging"
+	"github.com/aaroncunliffe/go-template-url-shortener/internal/telemetry"
 	"github.com/aaroncunliffe/go-template-url-shortener/internal/web/debug"
 
 	"github.com/caarlos0/env"
@@ -34,6 +36,14 @@ type config struct {
 }
 
 func main() {
+	os.Exit(run())
+}
+
+func run() int {
+	// Create a cancellable context
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
 	logger := logging.NewJsonLogger()
 	if version == "local" {
 		logger = logging.NewHumanReadableLogger()
@@ -60,12 +70,17 @@ func main() {
 	// Ideally hide passwords and secrets from here
 	logger.Info("config", "values", fmt.Sprintf("%+v", cfg))
 
-	// Create a cancellable context
-	ctx, cancel := context.WithCancel(context.Background())
-
 	// Channel for termination Signals
 	signalCh := make(chan os.Signal, 1)
 	signal.Notify(signalCh, syscall.SIGINT, syscall.SIGTERM)
+
+	// =========================================================================
+	// Initialise Telemetry
+	tel, err := telemetry.Setup(ctx, logger, "url-shortener-api")
+	if err != nil {
+		logger.Error("telemetry setup", "error", err.Error())
+		return 1
+	}
 
 	// =========================================================================
 	// Database Support
@@ -78,35 +93,41 @@ func main() {
 	})
 	if err != nil {
 		logger.Error("database open", "error", err.Error())
-		return
+		return 1
 	}
 	logger.Info("startup", "status", "DB connected", "host", cfg.DBHost)
 	defer func() {
 		logger.Info("shutdown", "status", "stopping DB support", "host", cfg.DBHost)
-		defer db.Close()
+		db.Close()
 	}()
+
+	// -------------------------------------------------------------------------
+	// Start Servers
+
+	// Channel specifically for server errors
+	serverErrors := make(chan error, 1)
 
 	// -------------------------------------------------------------------------
 	// Start Debug Service
 	// Internal only endpoint for healthchecks, debugging, and performance profiling
+	debugServer := &http.Server{
+		Addr:              fmt.Sprintf(":%s", cfg.DebugPort),
+		Handler:           debug.NewAPI(logger, db, tel),
+		ReadHeaderTimeout: 5 * time.Second,
+	}
 	go func() {
-		debugServer := &http.Server{
-			Addr:              fmt.Sprintf(":%s", cfg.DebugPort),
-			Handler:           debug.NewAPI(logger, db),
-			ReadHeaderTimeout: 5 * time.Second,
-		}
-
-		// No graceful shutdown intentional
-		if err := debugServer.ListenAndServe(); err != nil {
-			logger.Info("shutdown", "status", "debug router closed", "host", cfg.DebugPort, "error", err)
+		logger.Info("startup", "status", "debug server listening", "port", cfg.DebugPort)
+		if err := debugServer.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
+			serverErrors <- fmt.Errorf("debug server error: %w", err)
 		}
 	}()
 
 	// -------------------------------------------------------------------------
 	// Start API Service
 	api := api.NewAPI(api.Config{
-		Logger: logger,
-		DB:     database.New(db),
+		Logger:    logger,
+		DB:        database.New(db),
+		Telemetry: tel,
 	})
 
 	server := &http.Server{
@@ -116,12 +137,12 @@ func main() {
 		ReadHeaderTimeout: 5 * time.Second,
 	}
 
-	// Channel specifically for server errors
-	serverErrors := make(chan error, 1)
-
 	go func() {
-		logger.Info("startup", "status", "web server listening", "port", cfg.WebPort)
-		serverErrors <- server.ListenAndServe()
+		logger.Info("startup", "status", "api server listening", "port", cfg.WebPort)
+		if err := server.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
+			serverErrors <- fmt.Errorf("api server error: %w", err)
+		}
+
 	}()
 
 	// =========================================================================
@@ -143,13 +164,31 @@ func main() {
 	defer shutdownCancel()
 
 	exitCode := 0
+
+	logger.Info("shutdown", "status", "stopping api server")
 	if err := server.Shutdown(shutdownCtx); err != nil {
-		logger.Error("forced server shutdown", "error", err.Error())
+		logger.Error("forced api server shutdown", "error", err.Error())
 		exitCode = 1
 	} else {
-		logger.Info("server shut down gracefully")
+		logger.Info("api server shut down gracefully")
+	}
+
+	logger.Info("shutdown", "status", "stopping debug server")
+	if err := debugServer.Shutdown(shutdownCtx); err != nil {
+		logger.Error("forced debug server shutdown", "error", err.Error())
+		exitCode = 1
+	} else {
+		logger.Info("debug server shut down gracefully")
+	}
+
+	logger.Info("shutdown", "status", "stopping telemetry")
+	if err := tel.Shutdown(shutdownCtx); err != nil {
+		logger.Error("forced telemetry shutdown", "error", err.Error())
+		exitCode = 1
+	} else {
+		logger.Info("telemetry down gracefully")
 	}
 
 	logger.Info("shutdown", "status", "service stopped")
-	os.Exit(exitCode)
+	return exitCode
 }

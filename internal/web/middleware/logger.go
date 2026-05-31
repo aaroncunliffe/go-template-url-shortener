@@ -27,7 +27,6 @@ func Logger(logger *slog.Logger) func(http.Handler) http.Handler {
 				"path", r.RequestURI,
 				"scheme", scheme,
 				"method", r.Method,
-
 				"protocol", r.Proto,
 			)
 

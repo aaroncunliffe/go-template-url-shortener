@@ -5,30 +5,27 @@ import (
 	"net/http"
 
 	"github.com/aaroncunliffe/go-template-url-shortener/internal/database"
+	"github.com/aaroncunliffe/go-template-url-shortener/internal/telemetry"
 	"github.com/aaroncunliffe/go-template-url-shortener/internal/web"
 	"github.com/aaroncunliffe/go-template-url-shortener/internal/web/middleware"
 
 	"github.com/go-chi/chi/v5"
 )
 
-// Set up API with dependencies to be passed to required handlers
-
 type Config struct {
-	Logger *slog.Logger
-	DB     *database.Queries
+	Logger    *slog.Logger
+	DB        *database.Queries
+	Telemetry *telemetry.Telemetry
 }
 
 func NewAPI(config Config) http.Handler {
+
+	// Add nil checks for dependencies
+
 	mux := chi.NewRouter()
-
-	// Global Middleware
-	// Custom logger middleware for uniform logging
 	mux.Use(middleware.Logger(config.Logger))
+	mux.Use(middleware.Metrics(config.Telemetry))
 
-	// No requirement for cors, but this can be added with chi easily here
-	// https://github.com/go-chi/cors
-
-	// Attach routes
 	routes(&web.Router{Mux: mux, Logger: config.Logger}, config)
 
 	return mux

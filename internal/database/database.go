@@ -4,6 +4,7 @@ import (
 	"context"
 	"net/url"
 
+	"github.com/exaring/otelpgx"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
@@ -31,12 +32,20 @@ func Open(ctx context.Context, cfg Config) (*pgxpool.Pool, error) {
 		RawQuery: q.Encode(),
 	}
 
-	pool, err := pgxpool.New(ctx, u.String())
+	poolCfg, err := pgxpool.ParseConfig(u.String())
 	if err != nil {
 		return nil, err
 	}
 
-	// Test connection
+	// Attach otel
+	// Tracing coming soon
+	poolCfg.ConnConfig.Tracer = otelpgx.NewTracer()
+
+	pool, err := pgxpool.NewWithConfig(ctx, poolCfg)
+	if err != nil {
+		return nil, err
+	}
+
 	if err := pool.Ping(ctx); err != nil {
 		return nil, err
 	}

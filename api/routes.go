@@ -13,18 +13,15 @@ import (
 func routes(r *web.Router, config Config) {
 
 	linksHandler := links.Handler{
-		Logger: config.Logger,
+		Logger:    config.Logger,
+		Telemetry: config.Telemetry,
 		Links: linksCore.Core{
 			Logger: config.Logger,
-
 			// Plug in concrete store - can be Postgres or Redis
 			Store: pgstore.PGStore{DB: config.DB},
 		},
 	}
 	r.Get("/{path}", linksHandler.LinkRedirect)
-
-	// API
-	// Individual REST API Routes here
 	r.Post("/api/link", linksHandler.CreateLink)
 
 }

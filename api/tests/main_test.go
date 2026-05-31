@@ -12,6 +12,7 @@ import (
 
 	"github.com/aaroncunliffe/go-template-url-shortener/api"
 	"github.com/aaroncunliffe/go-template-url-shortener/internal/database"
+	"github.com/aaroncunliffe/go-template-url-shortener/internal/telemetry"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/testcontainers/testcontainers-go"
@@ -136,9 +137,17 @@ func startIntegrationEnv(ctx context.Context) (integrationEnv, error) {
 	}
 
 	logger := slog.New(slog.NewTextHandler(io.Discard, nil))
+	tel, err := telemetry.Setup(ctx, logger, "url-shortener-api-test")
+	if err != nil {
+		pool.Close()
+		testcontainers.TerminateContainer(postgresContainer)
+		return integrationEnv{}, fmt.Errorf("telemetry setup: %w", err)
+	}
+
 	server := httptest.NewServer(api.NewAPI(api.Config{
-		Logger: logger,
-		DB:     database.New(pool),
+		Logger:    logger,
+		DB:        database.New(pool),
+		Telemetry: tel,
 	}))
 
 	return integrationEnv{
