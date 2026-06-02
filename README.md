@@ -22,7 +22,7 @@ That includes:
   - Database-backed integration testing with `testcontainers-go`. 
 - Simple CI pipeline.
 - Local development with a simple out of the box Docker setup.
-- Multi stage docker image build for small final image size and narrow attack surface.
+- Multi stage docker image build for small final image size with a narrow attack surface.
 
 ## Project Structure
 ```text
@@ -45,7 +45,40 @@ internal/
 configs/
   database/                  Schema, sqlc config, query definitions
   docker/                    Docker setup
+  /*                         Various configuration files required for observability
 ```
+
+
+## Running Locally
+Examples using `task`:
+
+```bash
+# API at localhost:8080
+# Internal debug router at localhost:4040
+task docker-compose-up 
+```
+Then run API requests in the [postman collection](.resources/postman/collection.json)
+
+Useful commands:
+
+```bash
+task sqlc  # generate Go files for database interaction
+task test  # test, golangci-lint, govulncheck
+task testv # same as above --verbose
+task build # build docker image
+
+# Migration commands
+task db-inspect # extract DB schema to file
+task db-migrate # apply schema file to DB
+```
+
+
+## Observability
+Docker Compose has been set up with a fairly standard observability stack with fully declaritively defined and provisioned dashboards, intended to just work out of the box.
+
+![dashboard example](.resources/images/grafana-dashboard-1.png)
+
+
 
 ## Tooling
 This project currently uses:
@@ -59,27 +92,6 @@ This project currently uses:
 - GitHub Actions
 
 
-## Running Locally
-Examples using `task`:
-
-```bash
-task docker-compose-up # runs API on localhost:8080
-```
-Then run API requests in the [postman collection](.resources/postman/collection.json)
-
-Useful commands:
-
-```bash
-task sqlc  # generate Go files for database interaction
-task test  # testing
-task testv # testing with --verbose
-task build # build docker image
-
-# Migration commands
-task db-inspect # extract DB schema to file
-task db-migrate # apply schema file to DB
-```
-
 ## Possible Future Work
 #### Application
 - [x] Integration tests
@@ -88,8 +100,14 @@ task db-migrate # apply schema file to DB
 - [ ] Sensible automatic short path generation
 
 #### Other / Misc
-- [ ] Full Docker Compose setup for observability and monitoring
-  - [ ] K3D - local Kubernetes
-- [ ] Tracing for better observability
 - [x] Run golangci-lint - Also run as a CI stage
 - [x] Security scanning in pipeline
+- [x] Observability and monitoring stack
+  - [x] Grafana
+  - [x] Prometheus - Metrics
+  - [ ] Loki (with promtail) - Logging
+  - [ ] Tempo - Tracing
+  - [ ] K6 - Synthetic load 
+
+- [ ] K3D - local Kubernetes
+

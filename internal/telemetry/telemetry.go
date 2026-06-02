@@ -6,10 +6,11 @@ import (
 	"log/slog"
 	"net/http"
 
+	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
-	"go.opentelemetry.io/otel/exporters/prometheus"
+	otelprometheus "go.opentelemetry.io/otel/exporters/prometheus"
 	"go.opentelemetry.io/otel/metric"
 	sdkmetric "go.opentelemetry.io/otel/sdk/metric"
 )
@@ -25,13 +26,17 @@ type Telemetry struct {
 }
 
 func Setup(ctx context.Context, logger *slog.Logger, name string) (*Telemetry, error) {
-	exporter, err := prometheus.New()
+	exporter, err := otelprometheus.New()
 	if err != nil {
 		return nil, err
 	}
 
 	// Metrics
-	metricsProvider := sdkmetric.NewMeterProvider(sdkmetric.WithReader(exporter))
+	metricsProvider := sdkmetric.NewMeterProvider(
+		sdkmetric.WithReader(exporter),
+		sdkmetric.WithView(latencyHistogramView("http_request_duration_seconds")),
+		sdkmetric.WithView(latencyHistogramView("db.client.operation.duration")),
+	)
 	otel.SetMeterProvider(metricsProvider)
 	meter := metricsProvider.Meter(name)
 
@@ -107,4 +112,16 @@ func resultLabel(err error) string {
 		return c.Code()
 	}
 	return "error"
+}
+
+// Simple wrapper to help configur metrics with granular histogram buckets
+func latencyHistogramView(name string) sdkmetric.View {
+	return sdkmetric.NewView(
+		sdkmetric.Instrument{Name: name},
+		sdkmetric.Stream{
+			Aggregation: sdkmetric.AggregationExplicitBucketHistogram{
+				Boundaries: prometheus.DefBuckets,
+			},
+		},
+	)
 }
