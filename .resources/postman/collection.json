@@ -26,13 +26,42 @@
       "response": []
     },
     {
-      "name": "create link",
+      "name": "create link with short path",
       "request": {
         "method": "POST",
         "header": [],
         "body": {
           "mode": "raw",
           "raw": "{\n    \"short_path\": \"abcd\",\n    \"origin_url\": \"https://aaroncunliffe.dev\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "http://localhost:8080/api/link",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "8080",
+          "path": [
+            "api",
+            "link"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "create link",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n    \"origin_url\": \"https://aaroncunliffe.dev\"\n}",
           "options": {
             "raw": {
               "language": "json"

@@ -1,7 +1,7 @@
 package links
 
 type CreateLinkRequest struct {
-	ShortPath string `validate:"required,min=4,excludes=/" json:"short_path"`
+	ShortPath string `validate:"omitempty,min=4,shortpath" json:"short_path"`
 	OriginURL string `validate:"required,url" json:"origin_url"`
 }
 

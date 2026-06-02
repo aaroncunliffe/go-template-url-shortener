@@ -97,7 +97,7 @@ This project currently uses:
 - [x] Integration tests
 - [ ] Custom validator error messages
 - [x] Centralised middleware for error handling
-- [ ] Sensible automatic short path generation
+- [x] Sensible automatic short path generation
 
 #### Other / Misc
 - [x] Run golangci-lint - Also run as a CI stage

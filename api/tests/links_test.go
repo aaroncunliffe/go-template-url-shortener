@@ -3,6 +3,7 @@ package links_test
 import (
 	"encoding/json"
 	"net/http"
+	"regexp"
 	"strings"
 	"testing"
 
@@ -10,6 +11,11 @@ import (
 	"github.com/aaroncunliffe/go-template-url-shortener/internal/database"
 	"github.com/aaroncunliffe/go-template-url-shortener/internal/web"
 )
+
+// Currently supported characters
+// Explicitly not exported from the package, these are black box (ish) integration tests
+// intended to test the contract for the API
+var validShortCode = regexp.MustCompile(`^[a-zA-Z0-9_-]{6}$`)
 
 // Expected API response contract
 type responseEnvelope[T any] struct {
@@ -34,14 +40,26 @@ func TestCreateLinks(t *testing.T) {
 			expectGenericErrorBody bool
 		}{
 			{
-				name:              "success",
+				name:              "success with provided short_path",
 				body:              `{"short_path":"abcd","origin_url":"https://aaroncunliff.dev"}`,
 				expectedStatus:    http.StatusCreated,
 				expectedShortPath: "abcd",
 			},
 			{
-				name:            "validation rejects slash in short path",
+				name:              "success with auto-generated short_path",
+				body:              `{"origin_url":"https://aaroncunliff.dev"}`,
+				expectedStatus:    http.StatusCreated,
+				expectedShortPath: "", // generated, validated separately
+			},
+			{
+				name:            "validation rejects slash in short_path",
 				body:            `{"short_path":"bad/path","origin_url":"https://aaroncunliff.dev"}`,
+				expectedStatus:  http.StatusBadRequest,
+				expectErrorBody: true,
+			},
+			{
+				name:            "validation rejects special chars in short_path",
+				body:            `{"short_path":"hi!@#","origin_url":"https://aaroncunliff.dev"}`,
 				expectedStatus:  http.StatusBadRequest,
 				expectErrorBody: true,
 			},
@@ -127,8 +145,12 @@ func TestCreateLinks(t *testing.T) {
 					t.Fatalf("expected nil error, got %+v", body.Error)
 				}
 
-				if body.Data.ShortPath != tt.expectedShortPath {
+				if tt.expectedShortPath != "" && body.Data.ShortPath != tt.expectedShortPath {
 					t.Fatalf("expected short path %q, got %q", tt.expectedShortPath, body.Data.ShortPath)
+				}
+
+				if tt.expectedShortPath == "" && !validShortCode.MatchString(body.Data.ShortPath) {
+					t.Fatalf("expected auto-generated short path matching %s, got %q", validShortCode.String(), body.Data.ShortPath)
 				}
 			})
 		}

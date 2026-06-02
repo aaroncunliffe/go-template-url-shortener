@@ -5,11 +5,20 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"regexp"
 
 	"github.com/go-playground/validator/v10"
 )
 
 var v = validator.New()
+
+var shortPathChars = regexp.MustCompile(`^[A-Za-z0-9_-]+$`)
+
+func init() {
+	if err := v.RegisterValidation("shortpath", shortPath); err != nil {
+		panic(err)
+	}
+}
 
 type ValidationError struct {
 	Field string
@@ -38,4 +47,9 @@ func ValidRedirectURL(rawURL string) error {
 		return fmt.Errorf("scheme %q not allowed", parsed.Scheme)
 	}
 	return nil
+}
+
+// Custom validators
+func shortPath(fl validator.FieldLevel) bool {
+	return shortPathChars.MatchString(fl.Field().String())
 }
