@@ -4,6 +4,7 @@ package shortcode
 
 import (
 	"crypto/rand"
+	"fmt"
 	"math/big"
 )
 
@@ -15,8 +16,14 @@ func Generate() (string, error) {
 }
 
 func GenerateLength(length int) (string, error) {
+	if length <= 0 {
+		return "", fmt.Errorf("length must be greater than zero")
+
+	}
+
 	code := make([]byte, length)
 	for i := range code {
+		// Slightly slower crypto/rand, but provides a much more reliable random
 		n, err := rand.Int(rand.Reader, big.NewInt(int64(len(charset))))
 		if err != nil {
 			return "", err
