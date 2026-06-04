@@ -59,9 +59,19 @@ task docker-compose-up
 ```
 Then run API requests in the [postman collection](.resources/postman/collection.json)
 
-Useful commands:
 
 ```bash
+task demo
+```
+Runs a K6 load script to simulate usage for the dashboard use
+
+
+### Useful commands:
+
+```bash
+
+task demo  # runs a K6 load script to simulate usage for the dashboard use
+
 task sqlc  # generate Go files for database interaction
 task test  # test, golangci-lint, govulncheck
 task testv # same as above --verbose
@@ -77,6 +87,7 @@ task db-migrate # apply schema file to DB
 Docker Compose has been set up with a fairly standard observability stack with fully declaritively defined and provisioned dashboards, intended to just work out of the box.
 
 ![dashboard example](.resources/images/grafana-dashboard-1.png)
+![dashboard example 2](.resources/images/grafana-dashboard-2.png)
 
 
 

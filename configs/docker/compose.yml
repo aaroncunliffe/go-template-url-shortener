@@ -49,6 +49,17 @@ services:
       - '--storage.tsdb.path=/prometheus'
     depends_on:
       - api
+  k6:
+    image: grafana/k6:latest
+    profiles: ["demo"]
+    depends_on:
+      api:
+        condition: service_healthy
+    environment:
+      - TARGET_URL=api:8080
+    volumes:
+      - ./k6:/scripts:ro
+    command: run /scripts/demo.js
 volumes:
   pgdata:
   prometheus_data:
