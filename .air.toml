@@ -16,6 +16,7 @@ poll_interval = 500
 
 [log]
 time = true
+silent = true
 
 [misc]
 clean_on_exit = true

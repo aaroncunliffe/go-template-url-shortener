@@ -24,7 +24,7 @@ services:
     ports:
       - "5432:5432"
     volumes:
-      - pgdata:/var/lib/postgresql/data  # Persist data using a named volume
+      - pg_data:/var/lib/postgresql/data  # Persist data using a named volume
       - ../database/schema.sql:/docker-entrypoint-initdb.d/schema.sql:ro # Auto apply our schema
   grafana:
     image: grafana/grafana
@@ -51,6 +51,31 @@ services:
       - '--storage.tsdb.path=/prometheus'
     depends_on:
       - api
+  loki:
+    image: grafana/loki:latest
+    ports:
+      - 3100:3100
+    volumes:
+      - ./loki/loki.yml:/etc/loki/loki.yaml:ro
+    depends_on:
+      - api
+  alloy:
+    image: grafana/alloy:latest
+    ports:
+      - 12345:12345
+    volumes:
+      - ./alloy/config.alloy:/etc/alloy/config.alloy:ro
+      - alloy_data:/var/lib/alloy/data
+
+      # bind docker socket - only acceptable locally
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    command:
+      - run
+      - --server.http.listen-addr=0.0.0.0:12345
+      - --storage.path=/var/lib/alloy/data
+      - /etc/alloy/config.alloy
+    depends_on:
+      - loki
   k6:
     image: grafana/k6:latest
     profiles: ["demo"]
@@ -63,5 +88,7 @@ services:
       - ./k6:/scripts:ro
     command: run /scripts/demo.js
 volumes:
-  pgdata:
+  pg_data:
   prometheus_data:
+  alloy_data:
+  loki_data:

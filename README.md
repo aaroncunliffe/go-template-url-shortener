@@ -2,12 +2,16 @@
 
 This repository is a small Go URL shortener built as an example project template for other web based Go projects. 
 
-This is not intended to be a production-grade API. It is deliberately small in scope and leaves out a number of production concerns such as authentication, rate limiting, observability, hardened configuration, and more complete API documentation.
+This is not intended to be a production-grade API. It is deliberately small in scope and leaves out a number of production concerns such as authentication, rate limiting, hardened configuration, and more complete API documentation.
 
 ## What It Does
 The current sample code is a simple URL shortener that supports two endpoints:
-- Create a short link via `POST /api/link`
-- Redirect short link via `GET /{path}`
+- Create a short link via `POST localhost:8080/api/link`
+- Redirect short link via `GET localhost:8080/{path}`
+
+- Grafana dashboard accessible at `localhost:3000`
+- `task demo` to run a synthetic K6 load to drive the dashboard stats
+
 
 ## Why This Project Exists
 The goal of the project is to act as a simple Go project template that can easily be expanded into a larger project.
@@ -101,6 +105,7 @@ This project currently uses:
 - [Task](https://taskfile.dev/)
 - Postgres
 - GitHub Actions
+- Observability: Grafana, Prometheus, Loki (with alloy as a collector), Tempo
 
 
 ## Possible Future Work
@@ -116,7 +121,7 @@ This project currently uses:
 - [x] Observability and monitoring stack
   - [x] Grafana
   - [x] Prometheus - Metrics
-  - [ ] Loki (with promtail) - Logging
+  - [x] Loki (with alloy) - Logging
   - [ ] Tempo - Tracing
   - [ ] K6 - Synthetic load 
 
