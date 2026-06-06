@@ -10,3 +10,14 @@ datasources:
   jsonData:
     timeInterval: 15s
   editable: true
+- name: Postgres
+  uid: postgres
+  type: postgres
+  url: db:5432
+  user: postgres
+  secureJsonData:
+    password: 'password'
+  jsonData:
+      database: postgres
+  postgresVersion: 1500 # 15
+  sslmode: 'disable'

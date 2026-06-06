@@ -37,6 +37,8 @@ services:
       - GF_SECURITY_ADMIN_PASSWORD=password
     volumes:
       - ./grafana:/etc/grafana/provisioning
+    depends_on:
+      - db
   prometheus:
     image: prom/prometheus:latest
     ports:
