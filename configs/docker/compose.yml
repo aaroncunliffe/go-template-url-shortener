@@ -1,4 +1,6 @@
+name: url-shortener
 services:
+
   api:
     init: true
     build:
@@ -76,6 +78,16 @@ services:
       - /etc/alloy/config.alloy
     depends_on:
       - loki
+  tempo:
+    image: grafana/tempo:latest
+    command: [ "-target=all", "-config.file=/etc/tempo.yml" ]
+    volumes:
+      - ./tempo/tempo.yml:/etc/tempo.yml
+      - tempo_data:/var/tempo
+    ports:
+      - "3200:3200" # tempo
+      - "4317:4317" # Tempo OTLP GRPC
+      - "4318:4318" # Tempo OTLP HTTP
   k6:
     image: grafana/k6:latest
     profiles: ["demo"]
@@ -87,8 +99,11 @@ services:
     volumes:
       - ./k6:/scripts:ro
     command: run /scripts/demo.js
+
+# Volumes - for data persistence between restarts
 volumes:
   pg_data:
   prometheus_data:
   alloy_data:
   loki_data:
+  tempo_data:

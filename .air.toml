@@ -3,7 +3,7 @@ tmp_dir = "tmp"
 env_files = [".env"]
 
 [build]
-cmd = "go build -ldflags '-X main.version=air' -o ./tmp/main ./cmd/main.go"
+cmd = "go build -ldflags '-X main.version=local' -o ./tmp/main ./cmd/main.go"
 entrypoint = ["./tmp/main"]
 include_ext = ["go", "tpl", "tmpl", "html", "sql", "yaml", "yml", "toml", "env"]
 exclude_dir = ["tmp", "vendor", ".git", "configs/docker", ".github", ".resources"]

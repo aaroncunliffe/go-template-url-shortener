@@ -28,3 +28,9 @@ datasources:
   url: http://loki:3100
   access: proxy
   editable: false
+- name: Tempo
+  uid: tempo
+  type: tempo
+  url: http://tempo:3200
+  access: proxy
+  editable: false

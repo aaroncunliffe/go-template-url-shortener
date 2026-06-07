@@ -22,6 +22,8 @@ import (
 	_ "github.com/lib/pq"
 )
 
+const serviceName = "url-shortener-api"
+
 // Injected vars
 var version string = "local"
 var buildDate string = "now"
@@ -33,6 +35,9 @@ type config struct {
 	DBHost    string `env:"DB_HOST" envDefault:"db"`
 	WebPort   string `env:"WEB_PORT" envDefault:"8080"`
 	DebugPort string `env:"DEBUG_PORT" envDefault:"4040"`
+
+	TraceEndpoint    string  `env:"TRACE_ENDPOINT" envDefault:"http://tempo:4318"`
+	TraceProbability float64 `env:"TraceProbability" envDefault:"1.0"`
 }
 
 func main() {
@@ -45,9 +50,6 @@ func run() int {
 	defer cancel()
 
 	logger := logging.NewJsonLogger()
-	if version == "local" {
-		logger = logging.NewHumanReadableLogger()
-	}
 
 	// =========================================================================
 	// Startup
@@ -67,8 +69,15 @@ func run() int {
 	if err := env.Parse(&cfg); err != nil {
 		logger.Error("env.parse", "error", err.Error())
 	}
-	// Ideally hide passwords and secrets from here
-	logger.Info("config", "values", fmt.Sprintf("%+v", cfg))
+	logger.Info("config",
+		"db_user", cfg.DBUser,
+		"db_name", cfg.DBName,
+		"db_host", cfg.DBHost,
+		"web_port", cfg.WebPort,
+		"debug_port", cfg.DebugPort,
+		"trace_endpoint", cfg.TraceEndpoint,
+		"trace_probability", cfg.TraceProbability,
+	)
 
 	// Channel for termination Signals
 	signalCh := make(chan os.Signal, 1)
@@ -76,7 +85,12 @@ func run() int {
 
 	// =========================================================================
 	// Initialise Telemetry
-	tel, err := telemetry.Setup(ctx, logger, "url-shortener-api")
+	tel, err := telemetry.New(ctx, telemetry.Config{
+		ServiceName:      serviceName,
+		ServiceBuild:     version,
+		TraceEndpoint:    cfg.TraceEndpoint,
+		TraceProbability: cfg.TraceProbability,
+	})
 	if err != nil {
 		logger.Error("telemetry setup", "error", err.Error())
 		return 1

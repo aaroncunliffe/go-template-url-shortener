@@ -122,8 +122,9 @@ This project currently uses:
   - [x] Grafana
   - [x] Prometheus - Metrics
   - [x] Loki (with alloy) - Logging
-  - [ ] Tempo - Tracing
-  - [ ] K6 - Synthetic load 
+    - [ ] filter alloy to just logs from this docker compose project?
+  - [x] Tempo - Tracing
+  - [x] K6 - Synthetic load 
 
 - [ ] K3D - local Kubernetes
 

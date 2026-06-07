@@ -3,21 +3,28 @@ package telemetry
 import (
 	"context"
 	"errors"
-	"log/slog"
 	"net/http"
 
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracehttp"
 	otelprometheus "go.opentelemetry.io/otel/exporters/prometheus"
 	"go.opentelemetry.io/otel/metric"
+	"go.opentelemetry.io/otel/propagation"
 	sdkmetric "go.opentelemetry.io/otel/sdk/metric"
+	"go.opentelemetry.io/otel/sdk/resource"
+	sdktrace "go.opentelemetry.io/otel/sdk/trace"
 )
 
 type Telemetry struct {
+	ServiceName  string
+	ServiceBuild string
+
 	// Providers
 	metricsProvider *sdkmetric.MeterProvider
+	traceProvider   *sdktrace.TracerProvider
 
 	// Metrics
 	httpRequestsTotal   metric.Int64Counter
@@ -25,20 +32,57 @@ type Telemetry struct {
 	eventsTotal         metric.Int64Counter
 }
 
-func Setup(ctx context.Context, logger *slog.Logger, name string) (*Telemetry, error) {
-	exporter, err := otelprometheus.New()
+type Config struct {
+	ServiceName  string
+	ServiceBuild string
+
+	TraceEndpoint    string
+	TraceProbability float64
+}
+
+func New(ctx context.Context, config Config) (*Telemetry, error) {
+	// Tracing
+	traceExporter, err := otlptracehttp.New(ctx, otlptracehttp.WithEndpointURL(config.TraceEndpoint))
 	if err != nil {
 		return nil, err
 	}
 
+	res, err := resource.New(ctx,
+		resource.WithAttributes(
+			attribute.String("service.name", config.ServiceName),
+			attribute.String("service.build", config.ServiceBuild),
+		),
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	traceProvider := sdktrace.NewTracerProvider(
+		sdktrace.WithBatcher(traceExporter),
+		sdktrace.WithResource(res),
+		sdktrace.WithSampler(sdktrace.TraceIDRatioBased(config.TraceProbability)),
+	)
+	otel.SetTracerProvider(traceProvider)
+
+	// Parameters useful especially in a distributed workload - WC3 standard
+	otel.SetTextMapPropagator(propagation.NewCompositeTextMapPropagator(
+		propagation.TraceContext{},
+		propagation.Baggage{},
+	))
+
 	// Metrics
+	metricsExporter, err := otelprometheus.New()
+	if err != nil {
+		return nil, err
+	}
+
 	metricsProvider := sdkmetric.NewMeterProvider(
-		sdkmetric.WithReader(exporter),
+		sdkmetric.WithReader(metricsExporter),
 		sdkmetric.WithView(latencyHistogramView("http_request_duration_seconds")),
 		sdkmetric.WithView(latencyHistogramView("db.client.operation.duration")),
 	)
 	otel.SetMeterProvider(metricsProvider)
-	meter := metricsProvider.Meter(name)
+	meter := metricsProvider.Meter(config.ServiceName)
 
 	httpRequestsTotal, err := meter.Int64Counter(
 		"http_requests_total",
@@ -64,9 +108,12 @@ func Setup(ctx context.Context, logger *slog.Logger, name string) (*Telemetry, e
 		return nil, err
 	}
 
-	logger.Info("telemetry setup complete")
 	return &Telemetry{
+		ServiceName:  config.ServiceName,
+		ServiceBuild: config.ServiceBuild,
+
 		metricsProvider: metricsProvider,
+		traceProvider:   traceProvider,
 
 		httpRequestsTotal:   httpRequestsTotal,
 		httpRequestDuration: httpRequestDuration,
@@ -75,10 +122,16 @@ func Setup(ctx context.Context, logger *slog.Logger, name string) (*Telemetry, e
 }
 
 func (t *Telemetry) Shutdown(ctx context.Context) error {
+	var errs []error
+
 	if t.metricsProvider != nil {
-		return t.metricsProvider.Shutdown(ctx)
+		errs = append(errs, t.metricsProvider.Shutdown(ctx))
 	}
-	return nil
+	if t.traceProvider != nil {
+		errs = append(errs, t.traceProvider.Shutdown(ctx))
+	}
+
+	return errors.Join(errs...)
 }
 
 func (t *Telemetry) MetricsHandler() http.Handler {
@@ -114,7 +167,7 @@ func resultLabel(err error) string {
 	return "error"
 }
 
-// Simple wrapper to help configur metrics with granular histogram buckets
+// Simple wrapper to help configure metrics with consistent granular histogram buckets
 func latencyHistogramView(name string) sdkmetric.View {
 	return sdkmetric.NewView(
 		sdkmetric.Instrument{Name: name},

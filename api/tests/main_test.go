@@ -136,14 +136,14 @@ func startIntegrationEnv(ctx context.Context) (integrationEnv, error) {
 		return integrationEnv{}, fmt.Errorf("ping postgres: %w", err)
 	}
 
-	logger := slog.New(slog.NewTextHandler(io.Discard, nil))
-	tel, err := telemetry.Setup(ctx, logger, "url-shortener-api-test")
+	tel, err := telemetry.New(ctx, telemetry.Config{ServiceName: "url-shortener-api-test", ServiceBuild: "test"})
 	if err != nil {
 		pool.Close()
 		testcontainers.TerminateContainer(postgresContainer)
 		return integrationEnv{}, fmt.Errorf("telemetry setup: %w", err)
 	}
 
+	logger := slog.New(slog.NewTextHandler(io.Discard, nil))
 	server := httptest.NewServer(api.NewAPI(api.Config{
 		Logger:    logger,
 		DB:        database.New(pool),
