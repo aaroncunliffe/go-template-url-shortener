@@ -11,6 +11,8 @@ import (
 	"time"
 
 	"github.com/aaroncunliffe/go-template-url-shortener/api"
+	"github.com/aaroncunliffe/go-template-url-shortener/internal/business/links"
+	"github.com/aaroncunliffe/go-template-url-shortener/internal/business/links/pgstore"
 	"github.com/aaroncunliffe/go-template-url-shortener/internal/database"
 	"github.com/aaroncunliffe/go-template-url-shortener/internal/telemetry"
 
@@ -23,12 +25,12 @@ import (
 const schemaPath = "../../configs/database/schema.sql"
 
 type integrationEnv struct {
-	server  *httptest.Server
-	queries *database.Queries
-	pool    *pgxpool.Pool
-	ctx     context.Context
-
+	server    *httptest.Server
+	pool      *pgxpool.Pool
+	ctx       context.Context
 	container *postgres.PostgresContainer
+
+	store links.Storer
 }
 
 var (
@@ -152,9 +154,10 @@ func startIntegrationEnv(ctx context.Context) (integrationEnv, error) {
 
 	return integrationEnv{
 		server:    server,
-		queries:   database.New(pool),
 		pool:      pool,
 		ctx:       ctx,
 		container: postgresContainer,
+
+		store: pgstore.PGStore{DB: database.New(pool)},
 	}, nil
 }

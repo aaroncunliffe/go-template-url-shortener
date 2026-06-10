@@ -5,56 +5,56 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
-
-	"github.com/aaroncunliffe/go-template-url-shortener/internal/database"
-	"github.com/aaroncunliffe/go-template-url-shortener/internal/shortcode"
 )
 
 type Core struct {
 	Logger *slog.Logger
 	Store  Storer
 
-	generate func() (string, error)
+	Generate func() (string, error)
 }
 
 // Storer interface
 // Abstraction of database specific implementation
 // without needing to change business logic.
 type Storer interface {
-	GetLinkByPath(ctx context.Context, shortPath string) (database.Link, error)
-	InsertLink(ctx context.Context, shortPath string, originalURL string) error
+	GetLinkByPath(ctx context.Context, shortPath string) (Link, error)
+	InsertLink(ctx context.Context, link Link) error
 }
 
-func (h Core) ResolveLink(ctx context.Context, path string) (string, error) {
-	link, err := h.Store.GetLinkByPath(ctx, path)
+func (c Core) ResolveLink(ctx context.Context, path string) (string, error) {
+	link, err := c.Store.GetLinkByPath(ctx, path)
 	if err != nil {
 		return "", err
 	}
-	return link.OriginalUrl, nil
+	return link.OriginalURL, nil
 }
 
 // Create links using a generated short path if required
-func (h Core) CreateLink(ctx context.Context, shortPath string, originURL string) (string, error) {
+func (c Core) CreateLink(ctx context.Context, shortPath string, originalURL string) (string, error) {
+	link := Link{
+		ShortPath:   shortPath,
+		OriginalURL: originalURL,
+	}
 
 	// Easy route - attempt to store the manually set path first
 	if shortPath != "" {
-		if err := h.Store.InsertLink(ctx, shortPath, originURL); err != nil {
+		if err := c.Store.InsertLink(ctx, link); err != nil {
 			return "", err
 		}
 		return shortPath, nil
 	}
 
-	// Generate short code with a sensible backoff
-	generate := h.pathGenerator()
 	for attempt := range maxGenerateAttempts {
-		shortPath, err := generate()
+		generatedShortPath, err := c.Generate()
+		link.ShortPath = generatedShortPath
 		if err != nil {
 			return "", fmt.Errorf("generate short code: %w", err)
 		}
 
-		err = h.Store.InsertLink(ctx, shortPath, originURL)
+		err = c.Store.InsertLink(ctx, link)
 		if err == nil {
-			return shortPath, nil
+			return generatedShortPath, nil
 		}
 
 		// Break loop if not conflict
@@ -62,19 +62,10 @@ func (h Core) CreateLink(ctx context.Context, shortPath string, originURL string
 			return "", err
 		}
 
-		h.Logger.Warn("generated short code conflict",
+		c.Logger.Warn("generated short code conflict",
 			slog.Int("attempt", attempt+1),
 		)
 	}
 
 	return "", ErrShortCodeGenerationFailed
-}
-
-// pathGenerator returns the generator used for auto-created short paths.
-// Tests can inject h.generate; production falls back to shortcode.Generate.
-func (h Core) pathGenerator() func() (string, error) {
-	if h.generate != nil {
-		return h.generate
-	}
-	return shortcode.Generate
 }

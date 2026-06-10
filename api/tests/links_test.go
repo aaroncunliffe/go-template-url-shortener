@@ -8,7 +8,7 @@ import (
 	"testing"
 
 	apilinks "github.com/aaroncunliffe/go-template-url-shortener/api/links"
-	"github.com/aaroncunliffe/go-template-url-shortener/internal/database"
+	"github.com/aaroncunliffe/go-template-url-shortener/internal/business/links"
 	"github.com/aaroncunliffe/go-template-url-shortener/internal/web"
 )
 
@@ -32,7 +32,7 @@ func TestCreateLinks(t *testing.T) {
 		tests := []struct {
 			name                   string
 			body                   string
-			seed                   *database.InsertLinkParams
+			seed                   *links.Link
 			expectedStatus         int
 			expectedShortPath      string
 			expectErrorBody        bool
@@ -72,9 +72,9 @@ func TestCreateLinks(t *testing.T) {
 			{
 				name: "link already taken",
 				body: `{"short_path":"already-taken","origin_url":"https://aaroncunliffe.dev"}`,
-				seed: &database.InsertLinkParams{
+				seed: &links.Link{
 					ShortPath:   "already-taken",
-					OriginalUrl: "https://aaroncunliffe.dev",
+					OriginalURL: "https://aaroncunliffe.dev",
 				},
 				expectedStatus:  http.StatusConflict,
 				expectErrorBody: true,
@@ -93,7 +93,7 @@ func TestCreateLinks(t *testing.T) {
 
 				// Seed specific test data
 				if tt.seed != nil {
-					if err := env.queries.InsertLink(env.ctx, *tt.seed); err != nil {
+					if err := env.store.InsertLink(env.ctx, *tt.seed); err != nil {
 						t.Fatalf("seed link: %v", err)
 					}
 				}
@@ -164,16 +164,16 @@ func TestLinksRedirect(t *testing.T) {
 		tests := []struct {
 			name             string
 			path             string
-			seed             *database.InsertLinkParams
+			seed             *links.Link
 			expectedStatus   int
 			expectedLocation string
 		}{
 			{
 				name: "success",
 				path: "redirect-success",
-				seed: &database.InsertLinkParams{
+				seed: &links.Link{
 					ShortPath:   "redirect-success",
-					OriginalUrl: "https://aaroncunliffe.dev/redirect",
+					OriginalURL: "https://aaroncunliffe.dev/redirect",
 				},
 				expectedStatus:   http.StatusFound,
 				expectedLocation: "https://aaroncunliffe.dev/redirect",
@@ -197,7 +197,7 @@ func TestLinksRedirect(t *testing.T) {
 
 				// Seed specific test data
 				if tt.seed != nil {
-					if err := env.queries.InsertLink(env.ctx, *tt.seed); err != nil {
+					if err := env.store.InsertLink(env.ctx, *tt.seed); err != nil {
 						t.Fatalf("seed link: %v", err)
 					}
 				}

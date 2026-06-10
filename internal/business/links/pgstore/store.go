@@ -16,21 +16,21 @@ type PGStore struct {
 	DB *database.Queries
 }
 
-func (s PGStore) GetLinkByPath(ctx context.Context, path string) (database.Link, error) {
+func (s PGStore) GetLinkByPath(ctx context.Context, path string) (links.Link, error) {
 	row, err := s.DB.GetLinkByPath(ctx, path)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			return database.Link{}, links.ErrNotFound
+			return links.Link{}, links.ErrNotFound
 		}
-		return database.Link{}, err
+		return links.Link{}, err
 	}
-	return database.Link{ShortPath: row.ShortPath, OriginalUrl: row.OriginalUrl}, nil
+	return links.Link{ShortPath: row.ShortPath, OriginalURL: row.OriginalUrl}, nil
 }
 
-func (s PGStore) InsertLink(ctx context.Context, shortPath string, originalURL string) error {
+func (s PGStore) InsertLink(ctx context.Context, link links.Link) error {
 	err := s.DB.InsertLink(ctx, database.InsertLinkParams{
-		ShortPath:   shortPath,
-		OriginalUrl: originalURL,
+		ShortPath:   link.ShortPath,
+		OriginalUrl: link.OriginalURL,
 	})
 	if err != nil {
 		var pgErr *pgconn.PgError

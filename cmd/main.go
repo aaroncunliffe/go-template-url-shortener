@@ -85,7 +85,7 @@ func run() int {
 
 	// =========================================================================
 	// Initialise Telemetry
-	tel, err := telemetry.New(ctx, telemetry.Config{
+	telemetry, err := telemetry.New(ctx, telemetry.Config{
 		ServiceName:      serviceName,
 		ServiceBuild:     version,
 		TraceEndpoint:    cfg.TraceEndpoint,
@@ -126,7 +126,7 @@ func run() int {
 	// Internal only endpoint for healthchecks, debugging, and performance profiling
 	debugServer := &http.Server{
 		Addr:              fmt.Sprintf(":%s", cfg.DebugPort),
-		Handler:           debug.NewAPI(logger, db, tel),
+		Handler:           debug.NewAPI(logger, db, telemetry),
 		ReadHeaderTimeout: 5 * time.Second,
 	}
 	go func() {
@@ -141,7 +141,7 @@ func run() int {
 	api := api.NewAPI(api.Config{
 		Logger:    logger,
 		DB:        database.New(db),
-		Telemetry: tel,
+		Telemetry: telemetry,
 	})
 
 	server := &http.Server{
@@ -196,7 +196,7 @@ func run() int {
 	}
 
 	logger.Info("shutdown", "status", "stopping telemetry")
-	if err := tel.Shutdown(shutdownCtx); err != nil {
+	if err := telemetry.Shutdown(shutdownCtx); err != nil {
 		logger.Error("forced telemetry shutdown", "error", err.Error())
 		exitCode = 1
 	} else {

@@ -5,6 +5,7 @@ import (
 
 	linksCore "github.com/aaroncunliffe/go-template-url-shortener/internal/business/links"
 	"github.com/aaroncunliffe/go-template-url-shortener/internal/business/links/pgstore"
+	"github.com/aaroncunliffe/go-template-url-shortener/internal/shortcode"
 	"github.com/aaroncunliffe/go-template-url-shortener/internal/web"
 )
 
@@ -19,9 +20,12 @@ func routes(r *web.Router, config Config) {
 			Logger: config.Logger,
 			// Plug in concrete store - can be Postgres or Redis
 			Store: pgstore.PGStore{DB: config.DB},
+
+			// Plug in generator
+			Generate: shortcode.Generate,
 		},
 	}
+
 	r.Get("/{path}", linksHandler.LinkRedirect)
 	r.Post("/api/link", linksHandler.CreateLink)
-
 }

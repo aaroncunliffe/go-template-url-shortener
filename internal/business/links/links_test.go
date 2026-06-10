@@ -7,27 +7,25 @@ import (
 	"log/slog"
 	"reflect"
 	"testing"
-
-	"github.com/aaroncunliffe/go-template-url-shortener/internal/database"
 )
 
 type stubStore struct {
 	inserts    []string
 	insertErrs map[string]error
-	link       database.Link
+	link       Link
 	lookupErr  error
 }
 
-func (s *stubStore) GetLinkByPath(_ context.Context, _ string) (database.Link, error) {
+func (s *stubStore) GetLinkByPath(_ context.Context, _ string) (Link, error) {
 	if s.lookupErr != nil {
-		return database.Link{}, s.lookupErr
+		return Link{}, s.lookupErr
 	}
 	return s.link, nil
 }
 
-func (s *stubStore) InsertLink(_ context.Context, shortPath string, _ string) error {
-	s.inserts = append(s.inserts, shortPath)
-	if err, ok := s.insertErrs[shortPath]; ok {
+func (s *stubStore) InsertLink(_ context.Context, link Link) error {
+	s.inserts = append(s.inserts, link.ShortPath)
+	if err, ok := s.insertErrs[link.ShortPath]; ok {
 		return err
 	}
 	return nil
@@ -42,15 +40,15 @@ func TestResolveLink(t *testing.T) {
 
 	tests := []struct {
 		name        string
-		storeLink   database.Link
+		storeLink   Link
 		storeErr    error
 		expectedURL string
 		expectedErr error
 	}{
 		{
 			name: "returns original url",
-			storeLink: database.Link{
-				OriginalUrl: "https://aaroncunliffe.dev/page",
+			storeLink: Link{
+				OriginalURL: "https://aaroncunliffe.dev/page",
 			},
 			expectedURL: "https://aaroncunliffe.dev/page",
 		},
@@ -194,8 +192,8 @@ func TestCreateLink(t *testing.T) {
 				Logger: testLogger(),
 				Store:  store,
 
-				// override generate function to use tests
-				generate: func() (string, error) {
+				// override generate function to use in tests
+				Generate: func() (string, error) {
 					if tt.generateErr != nil {
 						return "", tt.generateErr
 					}
@@ -208,7 +206,7 @@ func TestCreateLink(t *testing.T) {
 				},
 			}
 
-			path, err := core.CreateLink(context.Background(), tt.inputShortPath, "https://example.com")
+			path, err := core.CreateLink(context.Background(), tt.inputShortPath, "https://aaroncunliffe.dev")
 
 			if tt.expectedErr != nil {
 				if err == nil {
