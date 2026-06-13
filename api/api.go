@@ -11,7 +11,6 @@ import (
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 
 	"github.com/go-chi/chi/v5"
-	chimiddleware "github.com/go-chi/chi/v5/middleware"
 )
 
 type Config struct {
@@ -24,7 +23,6 @@ func NewAPI(config Config) http.Handler {
 	// Add nil checks for dependencies
 
 	mux := chi.NewRouter()
-	mux.Use(chimiddleware.RequestID)
 	mux.Use(otelhttp.NewMiddleware(config.Telemetry.ServiceName))
 	mux.Use(middleware.Logger(config.Logger))
 	mux.Use(middleware.Metrics(config.Telemetry))

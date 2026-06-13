@@ -5,20 +5,30 @@ discovery.docker "local" {
 discovery.relabel "docker" {
   targets = discovery.docker.local.targets
 
+  // filter for only current docker compose project logs
+  rule {
+    action        = "keep"
+    source_labels = ["__meta_docker_container_label_com_docker_compose_project"]
+    regex         = "url-shortener"
+  }
+
+  // Add compose project as a label
+  rule {
+    source_labels = ["__meta_docker_container_label_com_docker_compose_project"]
+    target_label  = "compose_project"
+  }
+
+  // Strip leading slashes from container names and add as a label
   rule {
     source_labels = ["__meta_docker_container_name"]
     regex         = "/(.*)"
     target_label  = "container"
   }
 
+  // Add service as a label
   rule {
     source_labels = ["__meta_docker_container_label_com_docker_compose_service"]
     target_label  = "service"
-  }
-
-  rule {
-    source_labels = ["__meta_docker_container_label_com_docker_compose_project"]
-    target_label  = "compose_project"
   }
 }
 
@@ -31,6 +41,7 @@ loki.source.docker "local" {
   forward_to = [loki.process.docker.receiver]
 }
 
+// Extract log level as a label
 loki.process "docker" {
   stage.json {
     expressions = {

@@ -26,7 +26,7 @@ type Handler struct {
 
 func (h Handler) LinkRedirect(w http.ResponseWriter, r *http.Request) error {
 	path := chi.URLParam(r, "path")
-	h.Logger.Info("looking up url for path", slog.String("path", path))
+	h.Logger.InfoContext(r.Context(), "looking up url for path", slog.String("path", path))
 
 	redirect, err := h.Links.ResolveLink(r.Context(), path)
 	if err != nil {
@@ -41,7 +41,7 @@ func (h Handler) LinkRedirect(w http.ResponseWriter, r *http.Request) error {
 		return web.NewRequestError(http.StatusBadRequest, err, web.Untrusted)
 	}
 
-	h.Logger.Info("performing redirect", slog.String("path", path), slog.String("redirect", redirect))
+	h.Logger.InfoContext(r.Context(), "performing redirect", slog.String("path", path), slog.String("redirect", redirect))
 
 	//nolint:gosec
 	http.Redirect(w, r, redirect, http.StatusFound)
@@ -59,7 +59,7 @@ func (h Handler) CreateLink(w http.ResponseWriter, r *http.Request) error {
 		return web.NewRequestError(http.StatusBadRequest, fmt.Errorf("validating struct %w", err), web.Untrusted)
 	}
 
-	h.Logger.Info("creating link", slog.String("origin", input.OriginURL))
+	h.Logger.InfoContext(r.Context(), "creating link", slog.String("origin", input.OriginURL))
 	shortPath, err := h.Links.CreateLink(r.Context(), input.ShortPath, input.OriginURL)
 	if err != nil {
 		h.Telemetry.RecordEvent(r.Context(), eventLinkCreate, err)

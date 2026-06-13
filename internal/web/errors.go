@@ -34,30 +34,30 @@ func NewRequestError(status int, err error, isTrusted bool) error {
 func HandleError(logger *slog.Logger, h Handler) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		err := h(w, r)
-
-		// No error to handle
 		if err == nil {
 			return
 		}
 
+		// If not a known request error, log full error and return generic error to user
 		var re *RequestError
 		if !errors.As(err, &re) {
-			// Not a known request error
-			logger.Error("handler error", "error", err)
+			logger.ErrorContext(r.Context(), "handler error", "error", err)
 			ErrorJSON(w, http.StatusInternalServerError, http.StatusText(http.StatusInternalServerError))
 			return
 		}
 
-		// Known request error
+		// Request error - log internally
 		if re.Status >= http.StatusInternalServerError {
-			logger.Error("handler error", "status", re.Status, "error", err)
+			logger.ErrorContext(r.Context(), "handler error", "status", re.Status, "error", err)
 		} else {
-			logger.Warn("handler error", "status", re.Status, "error", err)
+			logger.WarnContext(r.Context(), "handler error", "status", re.Status, "error", err)
 		}
 
+		// Then decide how to display this to the user
 		if re.IsTrusted {
 			ErrorJSON(w, re.Status, re.Message)
 		} else {
+			// Generic response based on status
 			ErrorJSON(w, re.Status, http.StatusText(re.Status))
 		}
 	}

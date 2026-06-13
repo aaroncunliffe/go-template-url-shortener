@@ -62,7 +62,7 @@ func (c Core) CreateLink(ctx context.Context, shortPath string, originalURL stri
 			return "", err
 		}
 
-		c.Logger.Warn("generated short code conflict",
+		c.Logger.WarnContext(ctx, "generated short code conflict",
 			slog.Int("attempt", attempt+1),
 		)
 	}
